@@ -56,6 +56,26 @@ class Paths
     public string $writableDirectory = __DIR__ . '/../../writable';
 
     /**
+     * Constructor untuk mendukung Vercel Serverless environment
+     * (Vercel memiliki filesystem read-only, sehingga direktori writable diarahkan ke /tmp)
+     */
+    public function __construct()
+    {
+        if (getenv('VERCEL') || isset($_ENV['VERCEL'])) {
+            $tmpWritable = '/tmp/writable';
+            if (! is_dir($tmpWritable)) {
+                @mkdir($tmpWritable, 0777, true);
+                @mkdir($tmpWritable . '/cache', 0777, true);
+                @mkdir($tmpWritable . '/logs', 0777, true);
+                @mkdir($tmpWritable . '/session', 0777, true);
+                @mkdir($tmpWritable . '/debugbar', 0777, true);
+                @mkdir($tmpWritable . '/uploads', 0777, true);
+            }
+            $this->writableDirectory = $tmpWritable;
+        }
+    }
+
+    /**
      * ---------------------------------------------------------------
      * TESTS DIRECTORY NAME
      * ---------------------------------------------------------------
