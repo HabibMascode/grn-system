@@ -121,5 +121,7 @@ _modules/*
 # Visual Studio Code
 .vscode/
 
+*.bat
+
 /results/
 /phpunit.xml
