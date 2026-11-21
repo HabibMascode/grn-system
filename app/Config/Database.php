@@ -27,9 +27,9 @@ class Database extends Config
     public array $default = [
         'DSN'          => '',
         'hostname'     => 'localhost',
-        'username'     => '',
+        'username'     => 'root',
         'password'     => '',
-        'database'     => '',
+        'database'     => 'st_grn',
         'DBDriver'     => 'MySQLi',
         'DBPrefix'     => '',
         'pConnect'     => false,
@@ -193,6 +193,38 @@ class Database extends Config
     public function __construct()
     {
         parent::__construct();
+
+        // Cek Environment Variables dari Vercel/Hosting Online
+        $host = getenv('DB_HOST') ?: getenv('MYSQLHOST') ?: getenv('database_default_hostname');
+        if ($host) {
+            $this->default['hostname'] = $host;
+        }
+
+        $user = getenv('DB_USER') ?: getenv('MYSQLUSER') ?: getenv('database_default_username');
+        if ($user) {
+            $this->default['username'] = $user;
+        }
+
+        $pass = getenv('DB_PASS');
+        if ($pass === false) {
+            $pass = getenv('MYSQLPASSWORD');
+        }
+        if ($pass === false) {
+            $pass = getenv('database_default_password');
+        }
+        if ($pass !== false && $pass !== null) {
+            $this->default['password'] = $pass;
+        }
+
+        $name = getenv('DB_NAME') ?: getenv('MYSQLDATABASE') ?: getenv('database_default_database');
+        if ($name) {
+            $this->default['database'] = $name;
+        }
+
+        $port = getenv('DB_PORT') ?: getenv('MYSQLPORT') ?: getenv('database_default_port');
+        if ($port) {
+            $this->default['port'] = (int) $port;
+        }
 
         // Ensure that we always set the database group to 'tests' if
         // we are currently running an automated test suite, so that
