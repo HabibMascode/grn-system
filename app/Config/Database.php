@@ -194,10 +194,22 @@ class Database extends Config
     {
         parent::__construct();
 
-        // Cek Environment Variables dari Vercel/Hosting Online
-        $host = getenv('DB_HOST') ?: getenv('MYSQLHOST') ?: getenv('database_default_hostname');
+        // Cek Environment Variables dari Vercel/Hosting Online / Ngrok Tunnel
+        $host = getenv('DB_HOST') ?: getenv('MYSQLHOST') ?: getenv('NGROK_HOST') ?: getenv('database_default_hostname');
         if ($host) {
-            $this->default['hostname'] = $host;
+            // Bersihkan awalan tcp:// jika dicopy langsung dari output ngrok
+            $host = preg_replace('#^tcp://#i', '', trim($host));
+
+            // Jika host digabung dengan port (contoh: 4.tcp.ngrok.io:12345)
+            if (str_contains($host, ':')) {
+                [$cleanHost, $cleanPort] = explode(':', $host, 2);
+                $this->default['hostname'] = $cleanHost;
+                if (! empty($cleanPort) && is_numeric($cleanPort)) {
+                    $this->default['port'] = (int) $cleanPort;
+                }
+            } else {
+                $this->default['hostname'] = $host;
+            }
         }
 
         $user = getenv('DB_USER') ?: getenv('MYSQLUSER') ?: getenv('database_default_username');
@@ -221,9 +233,14 @@ class Database extends Config
             $this->default['database'] = $name;
         }
 
-        $port = getenv('DB_PORT') ?: getenv('MYSQLPORT') ?: getenv('database_default_port');
-        if ($port) {
+        $port = getenv('DB_PORT') ?: getenv('MYSQLPORT') ?: getenv('NGROK_PORT') ?: getenv('database_default_port');
+        if ($port && is_numeric($port)) {
             $this->default['port'] = (int) $port;
+        }
+
+        // Pastikan SSL/encryption dinonaktifkan untuk tunnel ngrok lokal
+        if (! empty($host) && ($host !== 'localhost' && $host !== '127.0.0.1')) {
+            $this->default['encrypt'] = false;
         }
 
         // Ensure that we always set the database group to 'tests' if
