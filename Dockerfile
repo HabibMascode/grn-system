@@ -39,6 +39,9 @@ WORKDIR /var/www/html
 # Salin seluruh kode proyek ke dalam container
 COPY . /var/www/html
 
+# Sediakan Composer untuk memasang dependency yang tidak disimpan di Git
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
 # Install dependensi PHP / CodeIgniter 4 ke folder /var/www/html/vendor
 RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
 
