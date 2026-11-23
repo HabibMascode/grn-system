@@ -17,8 +17,13 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Aktifkan mod_rewrite dan pastikan hanya mpm_prefork yang aktif
-RUN a2dismod mpm_event mpm_worker || true \
-    && a2enmod mpm_prefork rewrite
+RUN for module in /etc/apache2/mods-enabled/mpm_*.load; do \
+        [ -e "$module" ] || continue; \
+        a2dismod "$(basename "$module" .load)"; \
+    done \
+    && a2enmod mpm_prefork rewrite \
+    && test "$(apache2ctl -M 2>/dev/null | grep -Ec 'mpm_[[:alnum:]_]+_module')" -eq 1 \
+    && apache2ctl -M 2>/dev/null | grep -q 'mpm_prefork_module'
 
 # Arahkan DocumentRoot Apache ke folder /public
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
