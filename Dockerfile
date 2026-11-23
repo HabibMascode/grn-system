@@ -52,4 +52,4 @@ RUN printf "upload_max_filesize = 20M\npost_max_size = 25M\nmemory_limit = 256M\
 
 EXPOSE 8080
 
-CMD ["/bin/sh", "-c", "TARGET_PORT=${PORT:-8080}; printf 'Listen %s\n' \"$TARGET_PORT\" > /etc/apache2/ports.conf; sed -ri \"s/<VirtualHost \\*:[0-9]+>/<VirtualHost *:$TARGET_PORT>/g\" /etc/apache2/sites-available/*.conf; exec apache2-foreground"]
+CMD ["/bin/sh", "-c", "set -eu; for module in /etc/apache2/mods-enabled/mpm_*.load; do [ -e \"$module\" ] || continue; a2dismod \"$(basename \"$module\" .load)\"; done; a2enmod mpm_prefork rewrite; test \"$(apache2ctl -M 2>/dev/null | grep -Ec 'mpm_[[:alnum:]_]+_module')\" -eq 1; apache2ctl -M 2>/dev/null | grep -q 'mpm_prefork_module'; TARGET_PORT=${PORT:-8080}; printf 'Listen %s\n' \"$TARGET_PORT\" > /etc/apache2/ports.conf; sed -ri \"s/<VirtualHost \\*:[0-9]+>/<VirtualHost *:$TARGET_PORT>/g\" /etc/apache2/sites-available/*.conf; exec apache2-foreground"]
