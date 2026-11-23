@@ -39,6 +39,9 @@ WORKDIR /var/www/html
 # Salin seluruh kode proyek ke dalam container
 COPY . /var/www/html
 
+# Install dependensi PHP / CodeIgniter 4 ke folder /var/www/html/vendor
+RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+
 # Pastikan direktori writable dan uploads tersedia dengan permission www-data
 RUN mkdir -p /var/www/html/writable \
              /var/www/html/public/uploads/surat \
